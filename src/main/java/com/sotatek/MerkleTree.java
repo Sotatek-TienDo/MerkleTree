@@ -25,23 +25,6 @@ public abstract class MerkleTree implements IMerkleTree {
   }
 
   @Override
-  public Node findMerkelPathByHash(String hash) {
-
-    Node searchedNode = nodes.stream().filter(
-            node ->
-               node.getHash().equals(hash)
-            )
-        .findFirst()
-        .orElse(new Node());
-
-    if (Objects.isNull(searchedNode.getParent())) {
-      return searchedNode;
-    }
-
-    return searchedNode.getParent();
-  }
-
-  @Override
   public boolean verifyMerklePath(Node verifiedNode) {
 
     Node originNode = findMerkelPathByHash(verifiedNode.getHash());
@@ -57,6 +40,39 @@ public abstract class MerkleTree implements IMerkleTree {
     String verifiedHash = computeNodeHash(verifiedNode);
 
     return originNode.getHash().equals(verifiedHash);
+  }
+
+  @Override
+  public Node findMerkelPathByHash(String hash) {
+
+    Node searchedNode = findNodeByHash(nodes.get(0), hash);
+
+    if (Objects.isNull(searchedNode.getParent())) {
+      return searchedNode;
+    }
+
+    return searchedNode.getParent();
+  }
+
+  private Node findNodeByHash(Node node, String hash) {
+
+    if (node.getHash().equals(hash)) {
+      return node;
+    }
+
+    if (node.getHash().contains(hash)) {
+
+      if (node.getLeftLeaf().getHash().contains(hash)) {
+        return findNodeByHash(node.getLeftLeaf(), hash);
+      }
+
+      if (node.getRightLeaf().getHash().contains(hash)) {
+        return findNodeByHash(node.getRightLeaf(), hash);
+      }
+
+    }
+
+    return Node.builder().build();
   }
 
   public abstract String hashing(String hash);
